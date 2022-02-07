@@ -61,8 +61,8 @@ $users = User::query()
         $join->on('users.id', '=', 'statistics.id')
                 ->where('statistics.table', 'users');
     })
-    ->get(['users.name', DB::raw('`values`->"$.post_count" AS `posts`')])
     ->orderByRaw('`values`->"$.post_count" DESC')
+    ->get(['users.name', DB::raw('`values`->"$.post_count" AS `posts`')])
 ```
 
 | Name  | Posts |
