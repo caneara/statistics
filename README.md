@@ -37,11 +37,39 @@ IN
     ('articles', 'projects', 'tasks')
 ```
 
+Or, better still, use the Eloquent model to query the data:
+
+```php
+use Statistics\Models\Statistic;
+
+$stats = Statistic::query()
+    ->whereIn('table', ['articles', 'projects', 'tasks'])
+    ->get(['table', 'values']);
+```
+
 | Table     | Values            |
 | --------- | ----------------- |
 | Articles  | `{ "count" : 6 }` |
 | Projects  | `{ "count" : 3 }` |
 | Tasks     | `{ "count" : 2 }` |
+
+This becomes even more powerful when using joins for individual rows:
+
+```php
+$users = User::query()
+    ->join('statistics', function ($join) {
+        $join->on('users.id', '=', 'statistics.id')
+                ->where('statistics.table', 'users');
+    })
+    ->get(['users.name', DB::raw('`values`->"$.post_count" AS `posts`')])
+    ->orderByRaw('`values`->"$.post_count" DESC')
+```
+
+| Name  | Posts |
+| ----- | ----- |
+| John  | 6     |
+| Fred  | 4     |
+| Dave  | 1     |
 
 ## How does it work?
 
