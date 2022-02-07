@@ -8,6 +8,10 @@ class Statistic extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'values' => 'array',
+    ];
+
     /**
      * Get the table associated with the model.
      *

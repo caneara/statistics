@@ -43,11 +43,11 @@ class Test extends TestCase
 
         $this->assertEquals('', $statistics[0]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[0]->table);
-        $this->assertEquals(['count' => 1], json_decode($statistics[0]->values, true));
+        $this->assertEquals(['count' => 1], $statistics[0]->values);
 
         $this->assertEquals('1', $statistics[1]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[1]->table);
-        $this->assertEquals(['post_sum_likes' => '', 'post_count' => ''], json_decode($statistics[1]->values, true));
+        $this->assertEquals(['post_sum_likes' => '', 'post_count' => ''], $statistics[1]->values);
 
         User::query()->delete();
 
@@ -55,7 +55,7 @@ class Test extends TestCase
 
         $this->assertEquals('', Statistic::first()->getRawOriginal('id'));
         $this->assertEquals('users', Statistic::first()->table);
-        $this->assertEquals(['count' => 0], json_decode(Statistic::first()->values, true));
+        $this->assertEquals(['count' => 0], Statistic::first()->values);
     }
 
     /** @test */
@@ -82,18 +82,18 @@ class Test extends TestCase
 
         $this->assertEquals('', $statistics[0]->getRawOriginal('id'));
         $this->assertEquals('posts', $statistics[0]->table);
-        $this->assertEquals($expected, json_decode($statistics[0]->values, true));
+        $this->assertEquals($expected, $statistics[0]->values);
 
         $this->assertEquals('', $statistics[1]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[1]->table);
-        $this->assertEquals(['count' => 2], json_decode($statistics[1]->values, true));
+        $this->assertEquals(['count' => 2], $statistics[1]->values);
 
         $this->assertEquals('1', $statistics[2]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[2]->table);
-        $this->assertEquals(['post_sum_likes' => 8, 'post_count' => 4], json_decode($statistics[2]->values, true));
+        $this->assertEquals(['post_sum_likes' => 8, 'post_count' => 4], $statistics[2]->values);
 
         $this->assertEquals('2', $statistics[3]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[3]->table);
-        $this->assertEquals(['post_sum_likes' => 14, 'post_count' => 4], json_decode($statistics[3]->values, true));
+        $this->assertEquals(['post_sum_likes' => 14, 'post_count' => 4], $statistics[3]->values);
     }
 }
