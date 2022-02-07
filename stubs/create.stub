@@ -1,0 +1,8 @@
+SET @values = JSON_OBJECT({ITEMS});
+
+INSERT INTO `{TRACKERS}`
+    (`table`, `id`, `values`)
+VALUES
+    ('{TABLE}', NEW.{ID}, @values)
+ON DUPLICATE KEY UPDATE
+    `values` = @values;

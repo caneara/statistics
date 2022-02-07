@@ -1,0 +1,42 @@
+{
+    "name": "mattkingshott/statistics",
+    "description": "A package to maintain statistics on database records",
+    "keywords": [
+        "statistics",
+        "php",
+        "laravel",
+        "database"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/mattkingshott/statistics",
+    "autoload": {
+        "psr-4": {
+            "Statistics\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Statistics\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "^8.0",
+        "mattkingshott/triggers": "^1.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Statistics\\ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "minimum-stability": "stable"
+}

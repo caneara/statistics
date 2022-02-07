@@ -1,0 +1,6 @@
+DELETE FROM
+    `{TRACKERS}`
+WHERE
+    `table` = '{TABLE}'
+AND
+    `id` = OLD.{ID};
