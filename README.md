@@ -11,7 +11,7 @@
 
 # Statistics
 
-This package enables a Laravel application to maintain statistics of aggregated database records. It serves as a companion package to (and relies upon) [triggers](https://github.com/mattkingshott/triggers).
+This package enables a Laravel application to maintain aggregated statistics for database tables. It serves as a companion package to (and relies upon) [triggers](https://github.com/mattkingshott/triggers).
 
 ## Who is this for?
 
@@ -53,30 +53,6 @@ $stats = Statistic::query()
 | Projects  | `{ "count" : 3 }` |
 | Tasks     | `{ "count" : 2 }` |
 
-This becomes even more powerful when using joins for individual rows:
-
-```php
-$users = User::query()
-    ->join('statistics', function ($join) {
-        $join->on('users.id', '=', 'statistics.id')
-                ->where('statistics.table', 'users');
-    })
-    ->orderByRaw('`values`->"$.post_count" DESC')
-    ->get(['users.name', DB::raw('`values`->"$.post_count" AS `posts`')])
-```
-
-| Name  | Posts |
-| ----- | ----- |
-| John  | 6     |
-| Fred  | 4     |
-| Dave  | 1     |
-
-## How does it work?
-
-The package will automatically register and migrate a `statistics` table to your database. This table then serves as a repository for aggregated values. You can then easily join records to this table to get the associated metrics you need.
-
-The aggregated values are maintained using database triggers, which will automatically fire after a record is inserted, updated or deleted.
-
 ## Installation
 
 Pull in the package using Composer:
@@ -95,27 +71,9 @@ php artisan vendor:publish
 
 ## Usage
 
-The package allows you to:
+The package will automatically register and migrate a `statistics` table to your database. This table then serves as a repository for aggregated values. The values are maintained using database triggers, which will automatically fire after a record is inserted, updated or deleted.
 
-1. Maintain statistics for all the records in a table.
-2. Maintain statistics for individual rows in a table.
-3. Maintain statistics for individual AND all records in a table.
-
-Before proceeding further, it is important to remember that database triggers (which the package relies on) can only be added to a table after it has been created. Therefore, you should ensure that any referenced tables have first been added via `Schema::create` within your migrations e.g.
-
-```php
-// At this point, adding statistics that rely on the 'users' table will
-// throw a SQL error as the table has not yet been added to the database.
-
-Schema::create('users', function(Blueprint $table) {
-    // ...
-});
-
-// At this point, adding statistics that rely on the 'users' table will not
-// throw a SQL error as the table has been added to the database.
-```
-
-### Configuring models
+> Before proceeding further, it is important to remember that database triggers (which the package relies on) can only be added to a table after it has been created. In other words, don't try to create statistics for a table before it has been created by `Schema::create` (this will become clearer in the examples below).
 
 To begin, add the `InteractsWithStatistics` trait to any `Model` class that you want to maintain statistics for e.g.
 
@@ -123,7 +81,7 @@ To begin, add the `InteractsWithStatistics` trait to any `Model` class that you 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Statistics\Traits\InteractsWithStatistics;
+use Statistics\InteractsWithStatistics;
 
 class Article extends Model
 {
@@ -131,18 +89,16 @@ class Article extends Model
 }
 ```
 
-### Tracking all records
-
-To maintain statistics across the entire table (e.g. how many rows there are), call the static `trackAll` method on the `Model`.
+Next, call the static `track` method on the `Model`.
 
 ```php
-Article::trackAll();
+Article::track();
 ```
 
 Next, call one or more of the available aggregation methods:
 
 ```php
-Article::trackAll()
+Article::track()
     ->count()           // Count all records
     ->sum('likes')      // Get the sum of all records using the 'likes' column
     ->average('likes')  // Get the average value from the 'likes' column
@@ -153,7 +109,7 @@ Article::trackAll()
 You can call an aggregation method more than once if you need to maintain statistics on multiple columns. Simply supply a custom name to differentiate them:
 
 ```php
-Article::trackAll()
+Article::track()
     ->count()
     ->sum('likes', 'sum_likes')
     ->sum('views', 'sum_views');
@@ -162,7 +118,7 @@ Article::trackAll()
 Finally, call the `create` method to install the triggers.
 
 ```php
-Article::trackAll()
+Article::track()
     ->count()
     ->create();
 ```
@@ -181,114 +137,11 @@ class CreateArticlesTable extends Migration
             $table->string('title');
         });
 
-        Article::trackAll()
+        Article::track()
             ->count()
             ->create();
     }
 }
-```
-
-### Tracking individual rows
-
-In addition to maintaining statistics on a whole table, you can also maintain statistics for individual rows. This can be useful when tracking related records e.g. the count of 'articles', 'projects' and 'tasks' belonging to a 'user'.
-
-To begin, call the static `track` method on the `Model`:
-
-```php
-User::track();
-```
-
-Next, we need to add a watcher for each of the related tables. We do this by calling the `watch` method and supplying the related `Model`:
-
-```php
-User::track()
-    ->watch(Task::class);
-```
-
-The package will guess the foreign key on `Task` by combining the main model (`User`) and `_id`. However, you can override this by supplying your own foreign key:
-
-```php
-User::track()
-    ->watch(Task::class, 'author_id');
-```
-
-Next, we need to provide an array of SQL statements that the trigger should execute in order to maintain one or more statistics:
-
-```php
-User::track()
-    ->watch(Task::class, [
-        'task_count' => "(SELECT COUNT(*) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-    ]);
-
-// Or when supplying a custom foreign key...
-
-User::track()
-    ->watch(Task::class, 'author_id', [
-        'task_count' => "(SELECT COUNT(*) FROM `tasks` WHERE `author_id` = {ROW}.author_id)",
-    ]);
-```
-
-Notice the use of `{ROW}` in the SQL statement. You can use this placeholder to access the current row within the trigger. `{ROW}` will be automatically replaced with `OLD` or `NEW` depending on the event type.
-
-You are free to maintain more than one statistic for a related table if required e.g.
-
-```php
-User::track()
-    ->watch(Task::class, [
-        'task_count'        => "(SELECT COUNT(*) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-        'task_max_priority' => "(SELECT MAX(`priority`) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-    ]);
-```
-
-Next, repeat the process for any further watchers that you need e.g.
-
-```php
-User::track()
-    ->watch(Task::class, [
-        'task_count'        => "(SELECT COUNT(*) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-        'task_max_priority' => "(SELECT MAX(`priority`) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-    ])
-    ->watch(Project::class, [
-        'project_count' => "(SELECT COUNT(*) FROM `projects` WHERE `user_id` = {ROW}.user_id)",
-    ])
-    ->watch(Article::class, [
-        'article_count' => "(SELECT COUNT(*) FROM `articles` WHERE `user_id` = {ROW}.user_id)",
-    ]);
-```
-
-Finally, call the `create` method to install the triggers.
-
-```php
-User::track()
-    ->watch(Task::class, [
-        'task_count' => "(SELECT COUNT(*) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-    ])
-    ->create();
-```
-
-#### Example
-
-Here's a simple example within a database migration:
-
-```php
-return new class extends Migration
-{
-    public function up() : void
-    {
-        User::track()
-            ->watch(Task::class, [
-                'task_count'        => "(SELECT COUNT(*) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-                'task_max_priority' => "(SELECT MAX(`priority`) FROM `tasks` WHERE `user_id` = {ROW}.user_id)",
-            ])
-            ->watch(Project::class, [
-                'project_count' => "(SELECT COUNT(*) FROM `projects` WHERE `user_id` = {ROW}.user_id)",
-            ])
-            ->watch(Article::class, [
-                'article_count' => "(SELECT COUNT(*) FROM `articles` WHERE `user_id` = {ROW}.user_id)",
-            ])
-            ->create();
-    }
-};
 ```
 
 ## Contributing

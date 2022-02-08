@@ -12,11 +12,8 @@ return new class extends Migration {
     public function up() : void
     {
         Schema::create(config('statistics.table', 'statistics'), function(Blueprint $table) {
-            $table->string('table', 100);
-            $table->string('id')->default('');
+            $table->string('table', 100)->primary();
             $table->json('values');
-
-            $table->unique(['table', 'id']);
         });
     }
 

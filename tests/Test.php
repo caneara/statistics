@@ -2,7 +2,7 @@
 
 namespace Statistics\Tests;
 
-use Statistics\Models\Statistic;
+use Statistics\Statistic;
 use Orchestra\Testbench\TestCase;
 use Statistics\Tests\Models\Post;
 use Statistics\Tests\Models\User;
@@ -28,49 +28,37 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_creates_triggers_for_inserted_and_deleted_user_records() : void
+    public function it_creates_triggers_and_statistics() : void
     {
-        $this->assertCount(0, Statistic::get());
-
-        User::insert(['id' => 1, 'name' => 'John Doe']);
-
         $this->assertCount(2, Statistic::get());
 
-        $statistics = Statistic::query()
-            ->orderBy('table')
-            ->orderBy('id')
-            ->get();
+        $statistics = Statistic::orderBy('table')->get();
 
-        $this->assertEquals('', $statistics[0]->getRawOriginal('id'));
-        $this->assertEquals('users', $statistics[0]->table);
-        $this->assertEquals(['count' => 1], $statistics[0]->values);
+        $expected = [
+            'count'     => 0,
+            'average'   => 0,
+            'maximum'   => 0,
+            'minimum'   => 0,
+            'likes_sum' => 0,
+        ];
 
-        $this->assertEquals('1', $statistics[1]->getRawOriginal('id'));
+        $this->assertEquals('posts', $statistics[0]->table);
+        $this->assertEquals($expected, $statistics[0]->values);
+
         $this->assertEquals('users', $statistics[1]->table);
-        $this->assertEquals(['post_sum_likes' => '', 'post_count' => ''], $statistics[1]->values);
-
-        User::query()->delete();
-
-        $this->assertCount(1, Statistic::get());
-
-        $this->assertEquals('', Statistic::first()->getRawOriginal('id'));
-        $this->assertEquals('users', Statistic::first()->table);
-        $this->assertEquals(['count' => 0], Statistic::first()->values);
+        $this->assertEquals(['count' => 0], $statistics[1]->values);
     }
 
     /** @test */
-    public function it_creates_triggers_and_statistics_for_seeded_records() : void
+    public function it_updates_the_statistics_when_records_are_inserted() : void
     {
         Builder::seed();
 
         $this->assertCount(2, User::get());
         $this->assertCount(8, Post::get());
-        $this->assertCount(4, Statistic::get());
+        $this->assertCount(2, Statistic::get());
 
-        $statistics = Statistic::query()
-            ->orderBy('table')
-            ->orderBy('id')
-            ->get();
+        $statistics = Statistic::orderBy('table')->get();
 
         $expected = [
             'count'     => 8,
@@ -80,20 +68,40 @@ class Test extends TestCase
             'likes_sum' => 22,
         ];
 
-        $this->assertEquals('', $statistics[0]->getRawOriginal('id'));
         $this->assertEquals('posts', $statistics[0]->table);
         $this->assertEquals($expected, $statistics[0]->values);
 
-        $this->assertEquals('', $statistics[1]->getRawOriginal('id'));
         $this->assertEquals('users', $statistics[1]->table);
         $this->assertEquals(['count' => 2], $statistics[1]->values);
+    }
 
-        $this->assertEquals('1', $statistics[2]->getRawOriginal('id'));
-        $this->assertEquals('users', $statistics[2]->table);
-        $this->assertEquals(['post_sum_likes' => 8, 'post_count' => 4], $statistics[2]->values);
+    /** @test */
+    public function it_updates_the_statistics_when_records_are_deleted() : void
+    {
+        Builder::seed();
 
-        $this->assertEquals('2', $statistics[3]->getRawOriginal('id'));
-        $this->assertEquals('users', $statistics[3]->table);
-        $this->assertEquals(['post_sum_likes' => 14, 'post_count' => 4], $statistics[3]->values);
+        $this->assertCount(2, User::get());
+        $this->assertCount(8, Post::get());
+        $this->assertCount(2, Statistic::get());
+
+        User::first()->delete();
+
+        $this->assertCount(1, User::get());
+
+        $statistics = Statistic::orderBy('table')->get();
+
+        $expected = [
+            'count'     => 8,
+            'average'   => 2.75,
+            'maximum'   => 4,
+            'minimum'   => 1,
+            'likes_sum' => 22,
+        ];
+
+        $this->assertEquals('posts', $statistics[0]->table);
+        $this->assertEquals($expected, $statistics[0]->values);
+
+        $this->assertEquals('users', $statistics[1]->table);
+        $this->assertEquals(['count' => 1], $statistics[1]->values);
     }
 }

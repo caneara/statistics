@@ -3,7 +3,7 @@
 namespace Statistics\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Statistics\Traits\InteractsWithStatistics;
+use Statistics\InteractsWithStatistics;
 
 class Post extends Model
 {

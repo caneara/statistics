@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Statistics\Trackers;
+namespace Statistics;
 
 use Triggers\Trigger;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 
-class TableTracker
+class Tracker
 {
     /**
      * The list of aggregates to track.
@@ -78,12 +78,17 @@ class TableTracker
         $statement = str_replace(
             array_keys($placeholders),
             array_values($placeholders),
-            File::get(__DIR__ . '/../../stubs/table.stub')
+            File::get(__DIR__ . '/../stubs/trigger.stub')
         );
 
-        Trigger::table($this->table)->key('all')->afterDelete(fn() => $statement);
-        Trigger::table($this->table)->key('all')->afterInsert(fn() => $statement);
-        Trigger::table($this->table)->key('all')->afterUpdate(fn() => $statement);
+        Statistic::create([
+            'table'  => $this->table,
+            'values' => $this->aggregates->mapWithKeys(fn($item) => [$item['key'] => 0])->toArray(),
+        ]);
+
+        Trigger::table($this->table)->key('statistics')->afterDelete(fn() => $statement);
+        Trigger::table($this->table)->key('statistics')->afterInsert(fn() => $statement);
+        Trigger::table($this->table)->key('statistics')->afterUpdate(fn() => $statement);
     }
 
     /**

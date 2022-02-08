@@ -1,8 +1,0 @@
-UPDATE
-    `{TRACKERS}`
-SET
-    `values` = JSON_OBJECT({ITEMS})
-WHERE
-    `table` = '{TABLE}'
-AND
-    `id` = {ROW}.{FOREIGN};
