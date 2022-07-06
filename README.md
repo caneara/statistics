@@ -61,6 +61,17 @@ Pull in the package using Composer:
 composer require mattkingshott/statistics
 ```
 
+## Promo
+
+I made [Lumeno](https://lumeno.dev) to help you centralize your IT résumé, project portfolio and blog content. It aids in building a following, allows you to discover other creatives, and helps you to get invited for relevant job vacancies. Best of all, it's core feature set is free! [Get Started...](https://lumeno.dev)
+
+<!-- Screenshot -->
+<p align="center">
+    <a target="_blank" href="https://lumeno.dev">
+        <img src="resources/promotion.png" alt="Lumeno" style="height:350px">
+    </a>
+</p>
+
 ## Configuration
 
 The package includes a configuration file that allows you to change the name of the database table that contains the aggregated values (the default is 'statistics'). If you want to change it, publish the configuration file using Artisan:
