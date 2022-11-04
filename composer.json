@@ -1,5 +1,5 @@
 {
-    "name": "mattkingshott/statistics",
+    "name": "caneara/statistics",
     "description": "A package to maintain statistics on database records",
     "keywords": [
         "statistics",
@@ -9,7 +9,7 @@
     ],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/mattkingshott/statistics",
+    "homepage": "https://github.com/caneara/statistics",
     "autoload": {
         "psr-4": {
             "Statistics\\": "src"
