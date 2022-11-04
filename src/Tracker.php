@@ -83,12 +83,12 @@ class Tracker
 
         Statistic::create([
             'table'  => $this->table,
-            'values' => $this->aggregates->mapWithKeys(fn($item) => [$item['key'] => 0])->toArray(),
+            'values' => $this->aggregates->mapWithKeys(fn ($item) => [$item['key'] => 0])->toArray(),
         ]);
 
-        Trigger::table($this->table)->key('statistics')->afterDelete(fn() => $statement);
-        Trigger::table($this->table)->key('statistics')->afterInsert(fn() => $statement);
-        Trigger::table($this->table)->key('statistics')->afterUpdate(fn() => $statement);
+        Trigger::table($this->table)->key('statistics')->afterDelete(fn () => $statement);
+        Trigger::table($this->table)->key('statistics')->afterInsert(fn () => $statement);
+        Trigger::table($this->table)->key('statistics')->afterUpdate(fn () => $statement);
     }
 
     /**
